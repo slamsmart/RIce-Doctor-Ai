@@ -48,14 +48,18 @@ async function generateReportText(input: {
       messages: [
         {
           role: "system",
-          content: `You write concise government crop monitoring reports for ASEAN agriculture teams.
+          content: `You write high-clarity government crop monitoring reports for ASEAN agriculture teams.
 Return valid JSON only with this exact structure:
 {
   "polishedTitle": "short official report title",
   "polishedSummary": "one polished executive summary paragraph",
   "recommendations": "2 to 4 short actionable recommendation paragraphs separated by newline characters"
 }
-Keep the tone professional, factual, and practical. Do not invent statistics beyond the provided inputs.`,
+Keep the tone professional, factual, practical, and decision-oriented.
+Write like a regional agriculture operations brief, not a generic AI summary.
+Make the summary sound field-aware and ASEAN-relevant.
+Recommendations should prioritize rapid containment, farmer communication, local coordination, and follow-up monitoring.
+Do not invent statistics beyond the provided inputs.`,
         },
         {
           role: "user",
@@ -67,7 +71,17 @@ Risk level: ${input.riskLevel}
 Farms inspected: ${input.totalFarmsInspected}
 Disease cases found: ${input.diseaseCasesFound}
 Affected area (hectares): ${input.affectedAreaHectares}
-Raw summary: ${input.summary}`,
+Raw summary: ${input.summary}
+
+Please make it sound suitable for:
+- agriculture ministry briefings
+- provincial field teams
+- ASEAN food security monitoring contexts
+
+Emphasize:
+- severity and operational implications
+- near-term containment priorities
+- practical coordination actions for local officers and farmers`,
         },
       ],
       response_format: { type: "json_object" },

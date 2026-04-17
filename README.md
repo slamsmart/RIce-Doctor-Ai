@@ -1,6 +1,21 @@
 # Rice Doctor AI
 
+[![Powered by Qwen](https://img.shields.io/badge/Powered%20by-Qwen-FF6A00?style=for-the-badge)](https://www.alibabacloud.com/help/en/model-studio/)
+[![Alibaba Cloud DashScope](https://img.shields.io/badge/Alibaba%20Cloud-DashScope-1677FF?style=for-the-badge)](https://www.alibabacloud.com/help/en/model-studio/)
+
 Rice Doctor AI is a rapid MVP for crop-disease detection, farmer guidance, and agricultural monitoring across ASEAN farming workflows.
+
+## Powered by Qwen
+
+This prototype is powered by Qwen models through Alibaba Cloud DashScope:
+- `qwen3-vl-plus` for crop image understanding
+- `qwen-plus-latest` or `qwen-max-latest` for operational text generation
+
+The current implementation uses Qwen for:
+- crop scan analysis
+- treatment recommendation generation
+- monitoring report drafting
+- multilingual farmer guidance
 
 ## Why This Project Matters
 
@@ -82,6 +97,13 @@ This makes the repository both:
 - Validation: Zod
 - Monorepo: pnpm workspaces
 - AI routing: Alibaba Cloud DashScope, using Qwen vision and text models through a normalized API layer
+
+## Environment
+
+- `DASHSCOPE_API_KEY`: required DashScope API key
+- `DASHSCOPE_BASE_URL`: optional OpenAI-compatible endpoint, default `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
+- `DASHSCOPE_VL_MODEL`: optional vision model, default `qwen3-vl-plus`
+- `DASHSCOPE_TEXT_MODEL`: optional text model, default `qwen-plus-latest`, can be switched to `qwen-max-latest`
 
 ## Demo Flow
 

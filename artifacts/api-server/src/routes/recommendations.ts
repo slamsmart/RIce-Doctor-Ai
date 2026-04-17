@@ -56,7 +56,7 @@ async function generateRecommendation(input: {
       messages: [
         {
           role: "system",
-          content: `You are an agricultural expert for ASEAN countries. Provide fertilizer and treatment recommendations in valid JSON.
+          content: `You are an agricultural expert focused on ASEAN farming conditions. Provide fertilizer and treatment recommendations in valid JSON.
 Respond with this exact structure:
 {
   "fertilizerName": "product name",
@@ -67,13 +67,22 @@ Respond with this exact structure:
   "aiGuidance": "detailed guidance paragraph",
   "additionalNotes": "extra tips"
 }
-Keep recommendations practical, region-aware, and safe for farmers.`,
+Keep recommendations practical, region-aware, and safe for farmers.
+Favor realistic products or treatment categories commonly accessible through local cooperatives, agri-input shops, state agriculture outlets, or municipal support channels.
+The guidance should feel useful for rice, oil palm, corn, and cassava farmers in Southeast Asia, not generic global advice.
+Include concise disease-management logic: what to apply, when to apply it, and what to monitor after treatment.`,
         },
         {
           role: "user",
           content: `Recommend treatment for ${input.cropType} with disease: ${input.disease}.
 Country: ${input.country}
-Prefer realistic options aligned with these local supply channels: ${input.localOptions.join(", ")}.`,
+Prefer realistic options aligned with these local supply channels: ${input.localOptions.join(", ")}.
+
+Please optimize for:
+- practical field use by smallholder farmers
+- realistic ASEAN distribution channels
+- clear follow-up monitoring steps
+- concise but confident guidance that sounds agronomy-aware`,
         },
       ],
       response_format: { type: "json_object" },

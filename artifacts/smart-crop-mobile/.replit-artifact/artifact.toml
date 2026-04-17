@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/smart-crop-mobile/"
+title = "Smart Crop AI Mobile"
+version = "1.0.0"
+id = "artifacts/smart-crop-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/smart-crop-mobile/" ]
+localPort = 21209
+
+[services.development]
+run = "pnpm --filter @workspace/smart-crop-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/smart-crop-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/smart-crop-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "21209"
+BASE_PATH = "/smart-crop-mobile/"

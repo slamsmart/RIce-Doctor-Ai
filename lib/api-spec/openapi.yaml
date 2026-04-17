@@ -1,0 +1,662 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Smart Crop AI API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: scans
+    description: Crop disease scan operations
+  - name: recommendations
+    description: Fertilizer recommendation operations
+  - name: reports
+    description: Government monitoring reports
+  - name: crops
+    description: Crop & disease database
+  - name: voice
+    description: Voice guidance operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /scans:
+    get:
+      operationId: listScans
+      tags: [scans]
+      summary: List all disease scans
+      parameters:
+        - name: country
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: cropType
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of scans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scan"
+    post:
+      operationId: createScan
+      tags: [scans]
+      summary: Submit a new crop scan for AI analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateScanBody"
+      responses:
+        "201":
+          description: Scan created and analyzed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+
+  /scans/{id}:
+    get:
+      operationId: getScan
+      tags: [scans]
+      summary: Get a scan by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Scan details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+        "404":
+          description: Not found
+
+  /scans/stats/summary:
+    get:
+      operationId: getScansSummary
+      tags: [scans]
+      summary: Get scan statistics summary for dashboard
+      responses:
+        "200":
+          description: Summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScansSummary"
+
+  /scans/stats/by-country:
+    get:
+      operationId: getScansByCountry
+      tags: [scans]
+      summary: Get scan counts grouped by country
+      responses:
+        "200":
+          description: Scans by country
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CountryScanCount"
+
+  /scans/stats/by-disease:
+    get:
+      operationId: getScansByDisease
+      tags: [scans]
+      summary: Get scan counts grouped by detected disease
+      responses:
+        "200":
+          description: Scans by disease
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DiseaseScanCount"
+
+  /scans/stats/recent:
+    get:
+      operationId: getRecentScans
+      tags: [scans]
+      summary: Get the 10 most recent scans across all regions
+      responses:
+        "200":
+          description: Recent scans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scan"
+
+  /recommendations:
+    get:
+      operationId: listRecommendations
+      tags: [recommendations]
+      summary: List fertilizer recommendations
+      parameters:
+        - name: scanId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of recommendations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Recommendation"
+    post:
+      operationId: createRecommendation
+      tags: [recommendations]
+      summary: Generate AI fertilizer recommendation for a scan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRecommendationBody"
+      responses:
+        "201":
+          description: Recommendation generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recommendation"
+
+  /recommendations/{id}:
+    get:
+      operationId: getRecommendation
+      tags: [recommendations]
+      summary: Get a recommendation by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recommendation details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recommendation"
+
+  /crops:
+    get:
+      operationId: listCrops
+      tags: [crops]
+      summary: List supported crops and their diseases
+      parameters:
+        - name: country
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: type
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of crops
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Crop"
+
+  /crops/{id}:
+    get:
+      operationId: getCrop
+      tags: [crops]
+      summary: Get crop disease details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Crop details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Crop"
+
+  /voice/guidance:
+    post:
+      operationId: getVoiceGuidance
+      tags: [voice]
+      summary: Get voice guidance text for a disease and language
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoiceGuidanceBody"
+      responses:
+        "200":
+          description: Voice guidance text generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoiceGuidanceResponse"
+
+  /reports:
+    get:
+      operationId: listReports
+      tags: [reports]
+      summary: List government monitoring reports
+      responses:
+        "200":
+          description: List of reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+    post:
+      operationId: createReport
+      tags: [reports]
+      summary: Create a new monitoring report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReportBody"
+      responses:
+        "201":
+          description: Report created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /reports/{id}:
+    get:
+      operationId: getReport
+      tags: [reports]
+      summary: Get a report by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Scan:
+      type: object
+      properties:
+        id:
+          type: integer
+        cropType:
+          type: string
+          description: "rice | oil_palm | corn | cassava"
+        country:
+          type: string
+          description: "ID | TH | VN | PH | MY"
+        region:
+          type: string
+        farmerName:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        imageBase64:
+          type: ["string", "null"]
+        detectedDisease:
+          type: ["string", "null"]
+        diseaseConfidence:
+          type: ["number", "null"]
+          description: "0-100 confidence percentage"
+        severity:
+          type: ["string", "null"]
+          description: "mild | moderate | severe"
+        aiAnalysis:
+          type: ["string", "null"]
+        treatmentSuggestion:
+          type: ["string", "null"]
+        status:
+          type: string
+          description: "pending | analyzed | reviewed"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - cropType
+        - country
+        - region
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateScanBody:
+      type: object
+      properties:
+        cropType:
+          type: string
+        country:
+          type: string
+        region:
+          type: string
+        farmerName:
+          type: ["string", "null"]
+        imageBase64:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+      required:
+        - cropType
+        - country
+        - region
+
+    Recommendation:
+      type: object
+      properties:
+        id:
+          type: integer
+        scanId:
+          type: integer
+        disease:
+          type: string
+        cropType:
+          type: string
+        country:
+          type: string
+        fertilizerName:
+          type: string
+        fertilizerType:
+          type: string
+          description: "chemical | organic | biological"
+        applicationMethod:
+          type: string
+        dosage:
+          type: string
+        localAvailability:
+          type: ["string", "null"]
+          description: "Nearby store or cooperative name"
+        subsidized:
+          type: boolean
+        aiGuidance:
+          type: string
+        additionalNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - scanId
+        - disease
+        - cropType
+        - country
+        - fertilizerName
+        - fertilizerType
+        - applicationMethod
+        - dosage
+        - subsidized
+        - aiGuidance
+        - createdAt
+
+    CreateRecommendationBody:
+      type: object
+      properties:
+        scanId:
+          type: integer
+        country:
+          type: string
+      required:
+        - scanId
+        - country
+
+    Crop:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        localName:
+          type: ["string", "null"]
+        type:
+          type: string
+          description: "rice | oil_palm | corn | cassava"
+        countries:
+          type: array
+          items:
+            type: string
+        commonDiseases:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - type
+        - countries
+        - commonDiseases
+        - description
+        - createdAt
+
+    ScansSummary:
+      type: object
+      properties:
+        totalScans:
+          type: integer
+        analyzedToday:
+          type: integer
+        diseasesDetected:
+          type: integer
+        countriesCovered:
+          type: integer
+        avgConfidence:
+          type: number
+        severeCases:
+          type: integer
+      required:
+        - totalScans
+        - analyzedToday
+        - diseasesDetected
+        - countriesCovered
+        - avgConfidence
+        - severeCases
+
+    CountryScanCount:
+      type: object
+      properties:
+        country:
+          type: string
+        count:
+          type: integer
+        diseaseRate:
+          type: number
+      required:
+        - country
+        - count
+        - diseaseRate
+
+    DiseaseScanCount:
+      type: object
+      properties:
+        disease:
+          type: string
+        count:
+          type: integer
+        cropType:
+          type: string
+      required:
+        - disease
+        - count
+        - cropType
+
+    VoiceGuidanceBody:
+      type: object
+      properties:
+        disease:
+          type: string
+        treatment:
+          type: string
+        language:
+          type: string
+          description: "en | id | th | vi | ph | jv | su | ms"
+        cropType:
+          type: string
+      required:
+        - disease
+        - treatment
+        - language
+        - cropType
+
+    VoiceGuidanceResponse:
+      type: object
+      properties:
+        text:
+          type: string
+        language:
+          type: string
+        languageName:
+          type: string
+      required:
+        - text
+        - language
+        - languageName
+
+    Report:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        country:
+          type: string
+        region:
+          type: string
+        reportType:
+          type: string
+          description: "weekly | monthly | outbreak_alert | survey"
+        summary:
+          type: string
+        totalFarmsInspected:
+          type: integer
+        diseaseCasesFound:
+          type: integer
+        affectedAreaHectares:
+          type: number
+        riskLevel:
+          type: string
+          description: "low | medium | high | critical"
+        recommendations:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        createdBy:
+          type: ["string", "null"]
+      required:
+        - id
+        - title
+        - country
+        - region
+        - reportType
+        - summary
+        - totalFarmsInspected
+        - diseaseCasesFound
+        - affectedAreaHectares
+        - riskLevel
+        - createdAt
+    
+    CreateReportBody:
+      type: object
+      properties:
+        title:
+          type: string
+        country:
+          type: string
+        region:
+          type: string
+        reportType:
+          type: string
+        summary:
+          type: string
+        totalFarmsInspected:
+          type: integer
+        diseaseCasesFound:
+          type: integer
+        affectedAreaHectares:
+          type: number
+        riskLevel:
+          type: string
+        recommendations:
+          type: ["string", "null"]
+        createdBy:
+          type: ["string", "null"]
+      required:
+        - title
+        - country
+        - region
+        - reportType
+        - summary
+        - totalFarmsInspected
+        - diseaseCasesFound
+        - affectedAreaHectares
+        - riskLevel

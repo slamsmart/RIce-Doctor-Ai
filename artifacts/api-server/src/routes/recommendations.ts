@@ -8,10 +8,14 @@ import {
   ListRecommendationsQueryParams,
   ListRecommendationsResponseItem,
 } from "@workspace/api-zod";
-import { openai } from "@workspace/integrations-openai-ai-server";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
+
+const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY;
+const DASHSCOPE_BASE_URL =
+  process.env.DASHSCOPE_BASE_URL ?? "https://dashscope-intl.aliyuncs.com/compatible-mode/v1";
+const DASHSCOPE_TEXT_MODEL = process.env.DASHSCOPE_TEXT_MODEL ?? "qwen-plus-latest";
 
 const LOCAL_AVAILABILITY: Record<string, string[]> = {
   ID: ["Kios Pupuk Subsidi Desa", "Gapoktan setempat", "Toko Pertanian Kecamatan", "KUD (Koperasi Unit Desa)"],
@@ -20,6 +24,84 @@ const LOCAL_AVAILABILITY: Record<string, string[]> = {
   PH: ["Farmers' Cooperative (Samahang Magsasaka)", "Municipal Agriculture Office", "Local Farm Supply Store"],
   MY: ["FELDA/FELCRA Service Center", "State Agricultural Department Outlet", "Local Agro-Dealer"],
 };
+
+type RecommendationGeneration = {
+  fertilizerName?: string;
+  fertilizerType?: string;
+  applicationMethod?: string;
+  dosage?: string;
+  subsidized?: boolean;
+  aiGuidance?: string;
+  additionalNotes?: string;
+};
+
+async function generateRecommendation(input: {
+  cropType: string;
+  disease: string;
+  country: string;
+  localOptions: string[];
+}): Promise<RecommendationGeneration> {
+  if (!DASHSCOPE_API_KEY) {
+    throw new Error("DASHSCOPE_API_KEY must be set to generate recommendations with Qwen.");
+  }
+
+  const response = await fetch(`${DASHSCOPE_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${DASHSCOPE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: DASHSCOPE_TEXT_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: `You are an agricultural expert for ASEAN countries. Provide fertilizer and treatment recommendations in valid JSON.
+Respond with this exact structure:
+{
+  "fertilizerName": "product name",
+  "fertilizerType": "chemical|organic|biological",
+  "applicationMethod": "how to apply",
+  "dosage": "specific dosage amount",
+  "subsidized": true,
+  "aiGuidance": "detailed guidance paragraph",
+  "additionalNotes": "extra tips"
+}
+Keep recommendations practical, region-aware, and safe for farmers.`,
+        },
+        {
+          role: "user",
+          content: `Recommend treatment for ${input.cropType} with disease: ${input.disease}.
+Country: ${input.country}
+Prefer realistic options aligned with these local supply channels: ${input.localOptions.join(", ")}.`,
+        },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.3,
+      max_tokens: 900,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`DashScope recommendation failed (${response.status}): ${errorText}`);
+  }
+
+  const payload = await response.json() as {
+    choices?: Array<{
+      message?: {
+        content?: string | Array<{ type?: string; text?: string }>;
+      };
+    }>;
+  };
+
+  const rawContent = payload.choices?.[0]?.message?.content;
+  const content = typeof rawContent === "string"
+    ? rawContent
+    : rawContent?.find((item) => item.type === "text")?.text ?? "{}";
+
+  return JSON.parse(content) as RecommendationGeneration;
+}
 
 router.get("/recommendations", async (req, res): Promise<void> => {
   const params = ListRecommendationsQueryParams.safeParse(req.query);
@@ -31,7 +113,7 @@ router.get("/recommendations", async (req, res): Promise<void> => {
     rows = await db.select().from(recommendationsTable);
   }
 
-  res.json(rows.map(r => ListRecommendationsResponseItem.parse({
+  res.json(rows.map((r) => ListRecommendationsResponseItem.parse({
     ...r,
     createdAt: r.createdAt.toISOString(),
   })));
@@ -57,47 +139,12 @@ router.post("/recommendations", async (req, res): Promise<void> => {
   const localStore = localOptions[Math.floor(Math.random() * localOptions.length)];
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-5.2",
-      max_completion_tokens: 1024,
-      messages: [
-        {
-          role: "system",
-          content: `You are an agricultural expert for ASEAN countries. Provide fertilizer/treatment recommendations in JSON format.
-Respond with this exact structure:
-{
-  "fertilizerName": "product name",
-  "fertilizerType": "chemical|organic|biological",
-  "applicationMethod": "how to apply",
-  "dosage": "specific dosage amount",
-  "subsidized": true/false,
-  "aiGuidance": "detailed guidance paragraph",
-  "additionalNotes": "extra tips"
-}`
-        },
-        {
-          role: "user",
-          content: `Recommend treatment for ${cropType} with disease: ${disease}. The farmer is in ${country}. Focus on locally available products in ${country}.`
-        }
-      ],
-      response_format: { type: "json_object" },
-    });
-
-    const content = response.choices[0]?.message?.content ?? "{}";
-    let rec: {
-      fertilizerName?: string;
-      fertilizerType?: string;
-      applicationMethod?: string;
-      dosage?: string;
-      subsidized?: boolean;
-      aiGuidance?: string;
-      additionalNotes?: string;
-    } = {};
+    let rec: RecommendationGeneration = {};
 
     try {
-      rec = JSON.parse(content);
-    } catch {
-      logger.warn("Failed to parse AI recommendation JSON");
+      rec = await generateRecommendation({ cropType, disease, country, localOptions });
+    } catch (parseOrRequestError) {
+      logger.warn({ err: parseOrRequestError }, "Failed to generate recommendation with DashScope");
     }
 
     const [recommendation] = await db.insert(recommendationsTable).values({
@@ -108,7 +155,7 @@ Respond with this exact structure:
       fertilizerName: rec.fertilizerName ?? "NPK Compound Fertilizer",
       fertilizerType: (rec.fertilizerType ?? "chemical") as "chemical" | "organic" | "biological",
       applicationMethod: rec.applicationMethod ?? "Apply to soil around the plant base",
-      dosage: rec.dosage ?? "2-3 kg per 100m²",
+      dosage: rec.dosage ?? "2-3 kg per 100 m2",
       localAvailability: localStore,
       subsidized: rec.subsidized ?? false,
       aiGuidance: rec.aiGuidance ?? "Apply treatment as directed and monitor plant progress weekly.",

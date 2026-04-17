@@ -55,7 +55,7 @@ AI-powered rice disease detection, fertilizer recommendations, and regional moni
 - `GET /api/recommendations/:id` — Recommendation detail
 - `GET /api/crops` — List crops
 - `GET /api/crops/:id` — Crop detail
-- `POST /api/voice/guidance` — Generate voice guidance text
+- `POST /api/voice/guidance` — Generate multilingual farmer voice guidance text
 - `GET/POST /api/reports` — List/create reports
 - `GET /api/reports/:id` — Report detail
 
@@ -93,7 +93,7 @@ Expo React Native app — same features as the web app, mobile-native UI for And
 
 ## AI Integration
 
-Uses Alibaba Cloud DashScope for crop scan analysis and report text generation. Environment variables:
+Uses Alibaba Cloud DashScope for crop scan analysis, treatment recommendations, report writing, and multilingual voice guidance. Environment variables:
 - `DASHSCOPE_API_KEY` — required API key for DashScope Model Studio
 - `DASHSCOPE_BASE_URL` — optional OpenAI-compatible base URL; defaults to `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
 - `DASHSCOPE_VL_MODEL` — optional model name; defaults to `qwen3-vl-plus`

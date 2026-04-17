@@ -108,9 +108,15 @@ This makes the repository both:
 ## How to Run
 
 1. Install dependencies with `pnpm install`
-2. Set `DASHSCOPE_API_KEY`
-3. Start the API with `pnpm --filter @workspace/api-server run dev`
+2. Create a local `.env` with `DATABASE_URL` and `DASHSCOPE_API_KEY`
+3. Start the API with `pnpm --filter @workspace/api-server run build` then `node artifacts/api-server/dist/index.mjs`
 4. Start the web app with `pnpm --filter @workspace/smart-crop-ai run dev`
+
+Local defaults:
+- backend defaults to port `4000`
+- frontend defaults to port `5173`
+- frontend proxies `/api` to `http://127.0.0.1:4000`
+- `BASE_PATH` defaults to `/` for local development
 
 ## Demo Flow
 

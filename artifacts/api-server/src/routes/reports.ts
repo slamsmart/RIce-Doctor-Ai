@@ -149,7 +149,7 @@ router.post("/reports", async (req, res): Promise<void> => {
     ...input,
     title: generated.polishedTitle?.trim() || input.title,
     summary: generated.polishedSummary?.trim() || input.summary,
-    recommendations: generated.recommendations?.trim() || input.recommendations ?? null,
+    recommendations: generated.recommendations?.trim() || (input.recommendations ?? null),
   }).returning();
 
   if (!report) {

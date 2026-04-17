@@ -13,7 +13,7 @@ AI-powered rice disease detection, fertilizer recommendations, and regional moni
 - **Frontend**: React + Vite (artifacts/smart-crop-ai)
 - **API framework**: Express 5 (artifacts/api-server)
 - **Database**: PostgreSQL + Drizzle ORM
-- **AI**: OpenAI GPT-5.2 via Replit AI Integrations (no user API key needed)
+- **AI**: Qwen-VL via Alibaba Cloud DashScope for crop scan analysis
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
@@ -23,7 +23,7 @@ AI-powered rice disease detection, fertilizer recommendations, and regional moni
 
 ## Key Features
 
-1. **AI Crop Disease Detection** — Upload a photo of rice, oil palm, corn, or cassava; GPT-5.2 vision analyzes the image and returns disease name, confidence score (0-100%), severity (mild/moderate/severe), AI analysis text, and treatment suggestion.
+1. **AI Crop Disease Detection** — Upload a photo of rice, oil palm, corn, or cassava; Qwen-VL analyzes the image and returns disease name, confidence score (0-100%), severity (mild/moderate/severe), AI analysis text, and treatment suggestion.
 2. **Smart Fertilizer Recommendations** — AI generates fertilizer type, dosage, application method, and nearest local store (cooperative/kiosk) for each detected disease by country.
 3. **Voice Guidance** — AI-generated treatment explanation in 8 languages: English, Bahasa Indonesia, Thai, Vietnamese, Filipino, Javanese, Sundanese, Malay.
 4. **Government Dashboard** — Stats cards, bar chart by country, disease distribution pie chart, recent scans feed.
@@ -93,6 +93,8 @@ Expo React Native app — same features as the web app, mobile-native UI for And
 
 ## AI Integration
 
-Uses Replit AI Integrations for OpenAI (no user API key needed). Environment variables:
-- `AI_INTEGRATIONS_OPENAI_BASE_URL` — auto-provisioned
-- `AI_INTEGRATIONS_OPENAI_API_KEY` — auto-provisioned
+Uses Alibaba Cloud DashScope for crop scan analysis and report text generation. Environment variables:
+- `DASHSCOPE_API_KEY` — required API key for DashScope Model Studio
+- `DASHSCOPE_BASE_URL` — optional OpenAI-compatible base URL; defaults to `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
+- `DASHSCOPE_VL_MODEL` — optional model name; defaults to `qwen3-vl-plus`
+- `DASHSCOPE_TEXT_MODEL` — optional text model for report generation; defaults to `qwen-plus-latest` and can be set to `qwen-max-latest` for higher-quality report writing

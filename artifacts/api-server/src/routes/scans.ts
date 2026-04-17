@@ -12,10 +12,63 @@ import {
   GetRecentScansResponseItem,
   ListScansResponseItem,
 } from "@workspace/api-zod";
-import { openai } from "@workspace/integrations-openai-ai-server";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
+
+const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY;
+const DASHSCOPE_BASE_URL =
+  process.env.DASHSCOPE_BASE_URL ?? "https://dashscope-intl.aliyuncs.com/compatible-mode/v1";
+const DASHSCOPE_VL_MODEL = process.env.DASHSCOPE_VL_MODEL ?? "qwen3-vl-plus";
+
+type ScanAnalysis = {
+  detectedDisease?: string | null;
+  diseaseConfidence?: number | null;
+  severity?: string | null;
+  aiAnalysis?: string;
+  treatmentSuggestion?: string | null;
+};
+
+async function analyzeCropWithDashScope(messages: Array<Record<string, unknown>>): Promise<ScanAnalysis> {
+  if (!DASHSCOPE_API_KEY) {
+    throw new Error("DASHSCOPE_API_KEY must be set to analyze crop scans with Qwen-VL.");
+  }
+
+  const response = await fetch(`${DASHSCOPE_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${DASHSCOPE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: DASHSCOPE_VL_MODEL,
+      messages,
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+      max_tokens: 1024,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`DashScope request failed (${response.status}): ${errorText}`);
+  }
+
+  const payload = await response.json() as {
+    choices?: Array<{
+      message?: {
+        content?: string | Array<{ type?: string; text?: string }>;
+      };
+    }>;
+  };
+
+  const rawContent = payload.choices?.[0]?.message?.content;
+  const content = typeof rawContent === "string"
+    ? rawContent
+    : rawContent?.find((item) => item.type === "text")?.text ?? "{}";
+
+  return JSON.parse(content) as ScanAnalysis;
+}
 
 router.get("/scans/stats/summary", async (_req, res): Promise<void> => {
   const total = await db.select({ count: count() }).from(scansTable);
@@ -143,6 +196,12 @@ router.post("/scans", async (req, res): Promise<void> => {
         image_url: { url: `data:${mimeType};base64,${data.imageBase64}` }
       });
     }
+    if (data.imageUrl) {
+      imageContent.push({
+        type: "image_url",
+        image_url: { url: data.imageUrl }
+      });
+    }
 
     const promptMessages = [
       {
@@ -167,26 +226,12 @@ Base your analysis on common ${cropNames[data.cropType] ?? data.cropType} diseas
       }
     ];
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-5.2",
-      max_completion_tokens: 1024,
-      messages: promptMessages,
-      response_format: { type: "json_object" },
-    });
-
-    const content = response.choices[0]?.message?.content ?? "{}";
-    let analysis: {
-      detectedDisease?: string | null;
-      diseaseConfidence?: number | null;
-      severity?: string | null;
-      aiAnalysis?: string;
-      treatmentSuggestion?: string;
-    } = {};
+    let analysis: ScanAnalysis = {};
 
     try {
-      analysis = JSON.parse(content);
-    } catch {
-      logger.warn("Failed to parse AI response JSON");
+      analysis = await analyzeCropWithDashScope(promptMessages as Array<Record<string, unknown>>);
+    } catch (parseOrRequestError) {
+      logger.warn({ err: parseOrRequestError }, "Failed to analyze scan with DashScope");
     }
 
     const [updated] = await db.update(scansTable).set({

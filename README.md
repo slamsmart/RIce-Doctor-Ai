@@ -105,6 +105,13 @@ This makes the repository both:
 - `DASHSCOPE_VL_MODEL`: optional vision model, default `qwen3-vl-plus`
 - `DASHSCOPE_TEXT_MODEL`: optional text model, default `qwen-plus-latest`, can be switched to `qwen-max-latest`
 
+## How to Run
+
+1. Install dependencies with `pnpm install`
+2. Set `DASHSCOPE_API_KEY`
+3. Start the API with `pnpm --filter @workspace/api-server run dev`
+4. Start the web app with `pnpm --filter @workspace/smart-crop-ai run dev`
+
 ## Demo Flow
 
 The clearest demo path for judges is:

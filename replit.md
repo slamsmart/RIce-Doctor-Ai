@@ -2,99 +2,100 @@
 
 ## Overview
 
-AI-powered rice disease detection, fertilizer recommendations, and regional monitoring app for ASEAN governments and smallholder farmers. Built for the ASEAN AI Hackathon. Previously named "Smart Crop AI".
+AI-powered crop disease detection, fertilizer recommendations, multilingual farmer guidance, and regional monitoring for ASEAN agriculture teams and smallholder farmers.
 
 ## Stack
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **Frontend**: React + Vite (artifacts/smart-crop-ai)
-- **API framework**: Express 5 (artifacts/api-server)
-- **Database**: PostgreSQL + Drizzle ORM
-- **AI**: Qwen-VL via Alibaba Cloud DashScope for crop scan analysis
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
-- **Routing**: Wouter (frontend), Express 5 (backend)
-- **Charts**: Recharts
-- **Animations**: Framer Motion
+- Monorepo: pnpm workspaces
+- Node.js: 24
+- TypeScript: 5.9
+- Frontend: React + Vite
+- API: Express 5
+- Database: PostgreSQL + Drizzle ORM
+- Validation: Zod + drizzle-zod
+- API codegen: Orval
+- Charts: Recharts
+- Motion: Framer Motion
+- AI: Alibaba Cloud DashScope with Qwen-VL and Qwen text models
 
 ## Key Features
 
-1. **AI Crop Disease Detection** — Upload a photo of rice, oil palm, corn, or cassava; Qwen-VL analyzes the image and returns disease name, confidence score (0-100%), severity (mild/moderate/severe), AI analysis text, and treatment suggestion.
-2. **Smart Fertilizer Recommendations** — AI generates fertilizer type, dosage, application method, and nearest local store (cooperative/kiosk) for each detected disease by country.
-3. **Voice Guidance** — AI-generated treatment explanation in 8 languages: English, Bahasa Indonesia, Thai, Vietnamese, Filipino, Javanese, Sundanese, Malay.
-4. **Government Dashboard** — Stats cards, bar chart by country, disease distribution pie chart, recent scans feed.
-5. **Crop & Disease Library** — Database of Rice, Oil Palm, Corn, Cassava with common diseases per ASEAN country.
-6. **Government Reports** — Create and view weekly/monthly/outbreak_alert/survey reports with risk level badges.
-7. **ASEAN Multi-country** — Supports Indonesia (ID), Thailand (TH), Vietnam (VN), Philippines (PH), Malaysia (MY).
+1. AI crop disease detection for rice, oil palm, corn, and cassava
+2. Smart treatment and fertilizer recommendations
+3. Multilingual farmer guidance
+4. Government dashboard with scan analytics
+5. Crop and disease knowledge library
+6. Monitoring and outbreak reporting
+7. Multi-country ASEAN support for Indonesia, Thailand, Vietnam, Philippines, and Malaysia
 
-## Routes
+## Main Routes
 
-### Frontend Pages (artifacts/smart-crop-ai)
-- `/` — Home/landing with hero, stats, recent activity
-- `/scan` — Upload crop photo and submit for AI analysis
-- `/scan/:id` — Scan detail: disease result, confidence bar, voice guidance, recommendation
-- `/recommend` — Fertilizer recommendations list
-- `/crops` — Crop & disease library
-- `/dashboard` — Government analytics dashboard
-- `/reports` — Monitoring reports list
-- `/reports/:id` — Report detail
+### Frontend
 
-### API Routes (artifacts/api-server)
-- `GET /api/healthz` — Health check
-- `GET/POST /api/scans` — List/create scans
-- `GET /api/scans/stats/summary` — Dashboard summary
-- `GET /api/scans/stats/by-country` — Scans grouped by country
-- `GET /api/scans/stats/by-disease` — Scans grouped by disease
-- `GET /api/scans/stats/recent` — Last 10 scans
-- `GET /api/scans/:id` — Scan detail
-- `GET/POST /api/recommendations` — List/create recommendations
-- `GET /api/recommendations/:id` — Recommendation detail
-- `GET /api/crops` — List crops
-- `GET /api/crops/:id` — Crop detail
-- `POST /api/voice/guidance` — Generate multilingual farmer voice guidance text
-- `GET/POST /api/reports` — List/create reports
-- `GET /api/reports/:id` — Report detail
+- `/` home and summary
+- `/scan` crop upload and scan flow
+- `/scan/:id` scan detail and result page
+- `/recommend` treatment recommendation list
+- `/crops` crop and disease library
+- `/dashboard` analytics dashboard
+- `/reports` monitoring report list
+- `/reports/:id` report detail
 
-## Database Schema (lib/db/src/schema/)
+### API
 
-- `scansTable` — Crop scans with AI analysis results
-- `recommendationsTable` — Fertilizer recommendations per scan
-- `cropsTable` — Crop types and disease library
-- `reportsTable` — Government monitoring reports
+- `GET /api/healthz`
+- `GET/POST /api/scans`
+- `GET /api/scans/:id`
+- `GET /api/scans/stats/summary`
+- `GET /api/scans/stats/by-country`
+- `GET /api/scans/stats/by-disease`
+- `GET /api/scans/stats/recent`
+- `GET/POST /api/recommendations`
+- `GET /api/recommendations/:id`
+- `GET /api/crops`
+- `GET /api/crops/:id`
+- `POST /api/voice/guidance`
+- `GET/POST /api/reports`
+- `GET /api/reports/:id`
 
-## Mobile App (artifacts/smart-crop-mobile)
+## Database
 
-Expo React Native app — same features as the web app, mobile-native UI for Android APK and iOS.
-
-- **Framework**: Expo SDK 54 + Expo Router
-- **Preview path**: `/smart-crop-mobile/`
-- **Tab navigation**: Home | Scan | Dashboard | Reports
-- **Key screens**:
-  - `(tabs)/index.tsx` — Home: hero stats + recent scans feed
-  - `(tabs)/scan.tsx` — New scan: image picker (camera/gallery) + crop form + AI analysis
-  - `(tabs)/dashboard.tsx` — Gov. dashboard: bar charts by country and disease
-  - `(tabs)/reports.tsx` — Monitoring reports list + detail modal
-  - `scan-detail/[id].tsx` — Full analysis + fertilizer recommendation + voice guidance (8 languages)
-- **Design tokens**: Synced from web app (primary: #1a6635, accent: #f59f0a, Inter font, radius: 8px)
-- **iOS publishing**: via Replit Expo Launch (click Publish button)
-- **Android APK**: Not directly supported on Replit — must use EAS CLI externally
-
-## Key Commands
-
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
+- `scansTable` stores crop scan inputs and AI results
+- `recommendationsTable` stores treatment and fertilizer guidance per scan
+- `cropsTable` stores crop and disease library data
+- `reportsTable` stores operational monitoring reports
 
 ## AI Integration
 
-Uses Alibaba Cloud DashScope for crop scan analysis, treatment recommendations, report writing, and multilingual voice guidance. Environment variables:
-- `DASHSCOPE_API_KEY` — required API key for DashScope Model Studio
-- `DASHSCOPE_BASE_URL` — optional OpenAI-compatible base URL; defaults to `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
-- `DASHSCOPE_VL_MODEL` — optional model name; defaults to `qwen3-vl-plus`
-- `DASHSCOPE_TEXT_MODEL` — optional text model for report generation; defaults to `qwen-plus-latest` and can be set to `qwen-max-latest` for higher-quality report writing
+The current implementation uses Alibaba Cloud DashScope:
+
+- `qwen3-vl-plus` for crop image understanding
+- `qwen-plus-latest` or `qwen-max-latest` for text generation
+
+The AI layer currently powers:
+
+- disease detection from crop images
+- ASEAN-aware recommendations
+- monitoring report generation
+- multilingual farmer-facing guidance
+
+## Environment Variables
+
+- `DASHSCOPE_API_KEY` required DashScope API key
+- `DASHSCOPE_BASE_URL` optional OpenAI-compatible endpoint, default `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
+- `DASHSCOPE_VL_MODEL` optional vision model, default `qwen3-vl-plus`
+- `DASHSCOPE_TEXT_MODEL` optional text model, default `qwen-plus-latest`
+
+## Key Commands
+
+- `pnpm install`
+- `pnpm run build`
+- `pnpm run typecheck`
+- `pnpm --filter @workspace/api-server run dev`
+- `pnpm --filter @workspace/smart-crop-ai run dev`
+
+## Notes
+
+- The project is intentionally model-agnostic at the workflow layer.
+- The product logic consumes normalized structured outputs so provider re-routing stays fast.
+- This makes the repository suitable both as an MVP and as a migration-ready Qwen foundation.
